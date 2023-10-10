@@ -67,6 +67,7 @@ class Dumper(VPPApi):
             "taps": {},
             "prefixlists": {},
             "acls": {},
+            "vhost_users": {}
         }
         for idx, bond_iface in self.cache["bondethernets"].items():
             bond = {"description": ""}
@@ -119,6 +120,7 @@ class Dumper(VPPApi):
                     "dpdk",
                     "virtio",
                     "pg",
+                    "vhost-user"
                 ]:
                     i = {"description": ""}
                     if iface.sw_if_index in self.cache["lcps"]:
@@ -342,5 +344,11 @@ class Dumper(VPPApi):
                 config_acl["terms"].append(config_term)
 
             config["acls"][aclname] = config_acl
+
+        for idx, vhost_user in self.cache["vhost_users"].items():
+            config["vhost_users"][vhost_user.interface_name] = {
+                "sock-filename": vhost_user.sock_filename,
+                "is-server": vhost_user.is_server
+            }
 
         return config

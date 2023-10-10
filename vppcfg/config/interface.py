@@ -22,6 +22,7 @@ from . import lcp
 from . import address
 from . import mac
 from . import tap
+from . import vhost_user
 
 
 def get_qinx_parent_by_name(yaml, ifname):
@@ -292,6 +293,8 @@ def is_phy(yaml, ifname):
     if vxlan_tunnel.is_vxlan_tunnel(yaml, ifname):
         return False
     if tap.is_tap(yaml, ifname):
+        return False
+    if vhost_user.is_vhost_user(yaml, ifname):
         return False
     return True
 

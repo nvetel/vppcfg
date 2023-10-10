@@ -129,6 +129,7 @@ class VPPApi:
             "taps": {},
             "acls": {},
             "acl_tags": {},
+            "vhost_users": {}
         }
         return True
 
@@ -408,6 +409,11 @@ class VPPApi:
         api_response = self.vpp.api.sw_interface_tap_v2_dump()
         for tap in api_response:
             self.cache["taps"][tap.sw_if_index] = tap
+
+        self.logger.debug("Retrieving vhost_users")
+        api_response = self.vpp.api.sw_interface_vhost_user_dump()
+        for vhost_user in api_response:
+            self.cache["vhost_users"][vhost_user.sw_if_index] = vhost_user
 
         self.cache_read = True
         return self.cache_read

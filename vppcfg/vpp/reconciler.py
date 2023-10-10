@@ -26,6 +26,7 @@ from vppcfg.config import bridgedomain
 from vppcfg.config import vxlan_tunnel
 from vppcfg.config import lcp
 from vppcfg.config import tap
+from vppcfg.config import vhost_user
 from .vppapi import VPPApi
 
 
@@ -762,6 +763,9 @@ class Reconciler:
         if not self.__create_lcps():
             self.logger.warning("Could not create LCPs in VPP")
             ret = False
+        if not self.__create_vhost_users():
+            self.logger.warning("Could not create VhostUsers in VPP")
+            ret = False
         return ret
 
     def __create_loopbacks(self):
@@ -883,6 +887,33 @@ class Reconciler:
             if settings["mac-age-minutes"] > 0:
                 cli += f" mac-age {int(settings['mac-age-minutes'])}"
             self.cli["create"].append(cli)
+        return True
+
+    def __create_vhost_users(self):
+        """Create all vhost_users that occur in the config but not in VPP"""
+        # TODO use same method approach than the other items to fetch conf
+
+        # We keep track of created VHU because we want to rename them, and to
+        # do so we need to anticipate what name will be given.
+        # ex: first one VirtualEthernet0/0/0, then VirtualEthernet0/0/1, etc.
+        created_vhu = 0
+
+        sock_names = [vhu.sock_filename for idx, vhu in self.vpp.cache["vhost_users"].items()]
+        for ifname, vhu in self.cfg["vhost_users"].items():
+            if vhu["sock-filename"] not in sock_names:
+                create = f"create vhost-user socket {vhu['sock-filename']}"
+                if vhu["is-server"]:
+                    create += " server"
+                self.cli["create"].append(create)
+
+                # If needed, we rename the vhost user
+                last_vhu_name = f"VirtualEthernet0/0/{created_vhu}"
+                if ifname != last_vhu_name:
+                    rename = f"set interface name VirtualEthernet0/0/{created_vhu} {ifname}"
+                    self.cli["create"].append(rename)
+
+                created_vhu += 1
+
         return True
 
     def __create_lcps(self):

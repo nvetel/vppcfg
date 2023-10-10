@@ -6,6 +6,7 @@ vxlan_tunnels: map(include('vxlan'),key=str(matches='vxlan_tunnel[0-9]+'),requir
 taps: map(include('tap'),key=str(matches='tap[0-9]+'),required=False)
 prefixlists: map(include('prefixlist'),key=str(matches='[a-z][a-z0-9\-]+',min=1,max=64),required=False)
 acls: map(include('acl'),key=str(matches='[a-z][a-z0-9\-]+',min=1,max=56),required=False)
+vhost_users: map(include('vhost_user'),key=str(),required=False)
 ---
 vxlan:
   description: str(exclude='\'"',len=64,required=False)
@@ -110,3 +111,7 @@ acl-term:
 acl:
   description: str(exclude='\'"',len=64,required=False)
   terms: list(include('acl-term'), min=1, max=100, required=True)
+---
+vhost_user:
+  is-server: bool(required=False)
+  sock-filename: str(required=False)
